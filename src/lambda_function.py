@@ -1,6 +1,6 @@
 import json
 import os
-
+from dataclasses import dataclass
 import mysql.connector
 
 conn = mysql.connector.connect(
@@ -15,9 +15,23 @@ cursor.execute("SELECT VERSION();")
 version = cursor.fetchone()
 
 
+@dataclass
+class Record:
+    body: str
+
+
+@dataclass
+class EventData:
+    Records: list[Record]
+
+
 def lambda_handler(event, context):
-    print(event)
-    print(context)
+    event_data = EventData(**json.loads(event))
+
+    for record in event_data.Records:
+        message = json.loads(record.body)
+        print(f"{message = }")
+
     # TODO implement
     return {
         "statusCode": 200,
