@@ -1,13 +1,25 @@
 import json
 import mysql.connector
 
+from src.settings import Settings
 
-print(mysql.connector.constants)
+settings = Settings()
+
+conn = mysql.connector.connect(
+    host=settings.db_host,
+    database=settings.db_name,
+    user=settings.db_user,
+    password=settings.db_pass
+)
+
+cursor = conn.cursor()
+cursor.execute("SELECT VERSION();")
+version = cursor.fetchone()
 
 
 def lambda_handler(event, context):
     # TODO implement
     return {
         "statusCode": 200,
-        "body": json.dumps("Hello from Lambda! From GitHub Actions!!")
+        "body": json.dumps({"version": version})
     }
