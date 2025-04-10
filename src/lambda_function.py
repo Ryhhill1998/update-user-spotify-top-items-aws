@@ -15,17 +15,12 @@ cursor.execute("SELECT VERSION();")
 version = cursor.fetchone()
 
 
-@dataclass
-class Record:
-    body: str
-
-
 def lambda_handler(event, context):
-    records = [Record(**record_data) for record_data in event["Records"]]
+    records = event["Records"]
 
     for record in records:
         print(f"{record = }")
-        message = json.loads(record.body)
+        message = json.loads(record["body"])
         print(f"{message = }")
 
     # TODO implement
