@@ -4,7 +4,7 @@ import os
 import mysql.connector
 
 conn = mysql.connector.connect(
-    host=os.environ.get("DB_HOST"),
+    host=os.environ.get("RDS_PROXY_HOST"),
     database=os.environ.get("DB_NAME"),
     user=os.environ.get("DB_USER"),
     password=os.environ.get("DB_PASS")
