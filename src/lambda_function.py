@@ -1,4 +1,9 @@
 import json
+import mysql.connector
+
+
+print(mysql.connector.constants)
+
 
 def lambda_handler(event, context):
     # TODO implement
