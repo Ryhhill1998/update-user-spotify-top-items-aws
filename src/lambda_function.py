@@ -20,11 +20,6 @@ class Record:
     body: str
 
 
-@dataclass
-class EventData:
-    Records: list[Record]
-
-
 def lambda_handler(event, context):
     records = [Record(**record_data) for record_data in event["Records"]]
 
