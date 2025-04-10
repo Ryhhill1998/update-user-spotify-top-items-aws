@@ -1,15 +1,13 @@
 import json
+import os
+
 import mysql.connector
 
-from settings import Settings
-
-settings = Settings()
-
 conn = mysql.connector.connect(
-    host=settings.db_host,
-    database=settings.db_name,
-    user=settings.db_user,
-    password=settings.db_pass
+    host=os.environ.get("DB_HOST"),
+    database=os.environ.get("DB_NAME"),
+    user=os.environ.get("DB_USER"),
+    password=os.environ.get("DB_PASS")
 )
 
 cursor = conn.cursor()
