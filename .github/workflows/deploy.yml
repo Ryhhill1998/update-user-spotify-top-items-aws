@@ -22,7 +22,13 @@ jobs:
         run: |
           mkdir package
           python -m pip install --upgrade pip
-          pip install -r requirements.txt -t ./package
+          pip install -r requirements.txt \
+            --platform manylinux2014_aarch64 \  
+            --target=package \  
+            --implementation cp \  
+            --python-version 3.13 \  
+            --only-binary=:all: \  
+            --upgrade pydantic
 
       - name: Add Lambda function code
         run: cp src/* ./package/
