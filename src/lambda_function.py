@@ -1,7 +1,7 @@
 import json
 import mysql.connector
 
-from src.settings import Settings
+from settings import Settings
 
 settings = Settings()
 
