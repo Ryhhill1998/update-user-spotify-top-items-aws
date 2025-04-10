@@ -16,6 +16,8 @@ version = cursor.fetchone()
 
 
 def lambda_handler(event, context):
+    print(event)
+    print(context)
     # TODO implement
     return {
         "statusCode": 200,
