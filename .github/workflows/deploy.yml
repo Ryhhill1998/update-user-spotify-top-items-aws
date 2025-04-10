@@ -22,7 +22,7 @@ jobs:
         run: |
           mkdir package
           python -m pip install --upgrade pip
-          pip install -r requirements.txt --platform manylinux2014_aarch64 -t ./package
+          pip install -r requirements.txt -t ./package
 
       - name: Add Lambda function code
         run: cp src/* ./package/
