@@ -1,2 +1,4 @@
+pydantic>=2.11.2
 pydantic-settings>=2.8.1
+pydantic_core>=2.33.1
 mysql-connector-python>=9.2.0
