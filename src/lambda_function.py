@@ -26,11 +26,9 @@ class EventData:
 
 
 def lambda_handler(event, context):
-    print(f"{event = }")
-    event_data = EventData(**event)
-    print(f"{event_data = }")
+    records = [Record(**record_data) for record_data in event["Records"]]
 
-    for record in event_data.Records:
+    for record in records:
         print(f"{record = }")
         message = json.loads(record.body)
         print(f"{message = }")
