@@ -80,6 +80,10 @@ async def main(event):
     for top_items_data in all_top_items_data:
         db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
 
+    # 6. Close all connections.
+    await client.aclose()
+    connection.close()
+
 
 def lambda_handler(event, context):
     asyncio.run(main(event))
