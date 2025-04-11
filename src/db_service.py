@@ -19,8 +19,8 @@ class DBService:
 
     def store_top_items(self, user_id: str, top_items_data: TopItemsData, collected_date: str):
         top_items = top_items_data.top_items
-        item_type = top_items_data.item_type
-        time_range = top_items_data.time_range
+        item_type = top_items_data.item_type.value
+        time_range = top_items_data.time_range.value
 
         insert_statement = f"""
             INSERT INTO top_{item_type} (spotify_user_id, {item_type}_id, collected_date, position, time_range)

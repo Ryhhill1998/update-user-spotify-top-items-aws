@@ -30,8 +30,8 @@ class TopItem:
 @dataclass
 class TopItemsData:
     top_items: list[TopItem]
-    item_type: str
-    time_range: str
+    item_type: ItemType
+    time_range: TimeRange
 
 
 class SpotifyService:
@@ -58,8 +58,8 @@ class SpotifyService:
             self,
             base_url: str,
             access_token: str,
-            item_type: str,
-            time_range: str
+            item_type: ItemType,
+            time_range: TimeRange
     ) -> TopItemsData:
         url = f"{base_url}/{item_type}"
         params = {"time_range": time_range, "limit": 50}

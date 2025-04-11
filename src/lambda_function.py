@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from src.db_service import DBService
-from src.spotify_service import SpotifyService, TimeRange, ItemType
+from src.spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
 
 
 @dataclass
@@ -16,14 +16,17 @@ class User:
     refresh_token: str
 
 
-def get_user_data_from_event(event: dict):
+def get_user_data_from_event(event: dict) -> User:
     record = event["Records"][0]
     data = json.loads(record["body"])
     user = User(id=data["user_id"], refresh_token=data["refresh_token"])
     return user
 
 
-async def get_user_top_items_data_for_all_time_ranges(spotify_service: SpotifyService, access_token: str):
+async def get_user_top_items_data_for_all_time_ranges(
+        spotify_service: SpotifyService,
+        access_token: str
+) -> list[TopItemsData]:
     tasks = []
 
     for time_range in TimeRange:
