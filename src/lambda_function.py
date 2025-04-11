@@ -101,8 +101,8 @@ async def main(event):
 
 def lambda_handler(event, context):
     # asyncio.run(main(event))
-    res = requests.get("https://67e144d958cc6bf785251147.mockapi.io/users")
+    res = requests.get("https://genius.com/Chri-tian-gate-numb-lyrics")
     print(f"{res = }")
     res.raise_for_status()
-    data = res.json()
+    data = res.text
     print(f"{data = }")
