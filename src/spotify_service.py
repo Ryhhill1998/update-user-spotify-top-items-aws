@@ -49,9 +49,12 @@ class SpotifyService:
 
         res = await self.client.post(url=url, headers=headers, data=data)
         res.raise_for_status()
-        token_data = await res.json()
+        token_data = res.json()
 
-        refreshed_tokens = Tokens(**token_data)
+        refreshed_tokens = Tokens(
+            access_token=token_data["access_token"],
+            refresh_token=token_data.get("refresh_token")
+        )
         return refreshed_tokens
 
     async def get_top_items(
@@ -61,12 +64,12 @@ class SpotifyService:
             item_type: ItemType,
             time_range: TimeRange
     ) -> TopItemsData:
-        url = f"{base_url}/{item_type}"
-        params = {"time_range": time_range, "limit": 50}
+        url = f"{base_url}/{item_type.value}"
+        params = {"time_range": time_range.value, "limit": 50}
 
         res = await self.client.get(url=url, params=params, headers={"Authorization": f"Bearer {access_token}"})
         res.raise_for_status()
-        data = await res.json()
+        data = res.json()
 
         top_items_data = data["items"]
         top_items = [TopItem(id=entry["id"], position=index + 1) for index, entry in enumerate(top_items_data)]

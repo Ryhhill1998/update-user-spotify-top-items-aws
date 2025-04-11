@@ -44,8 +44,8 @@ async def get_user_top_items_data_for_all_time_ranges(
             get_top_items_task = spotify_service.get_top_items(
                 base_url=f"{SPOTIFY_DATA_BASE_URL}/me/top",
                 access_token=access_token,
-                item_type=item_type.value,
-                time_range=time_range.value
+                item_type=item_type,
+                time_range=time_range
             )
             tasks.append(get_top_items_task)
 
@@ -71,6 +71,8 @@ async def main(event):
         client_secret=SPOTIFY_CLIENT_SECRET,
         refresh_token=user.refresh_token
     )
+
+    print(f"{tokens.access_token = }")
 
     # 3. If new refresh_token is returned, update it in the DB.
     if tokens.refresh_token is not None:
