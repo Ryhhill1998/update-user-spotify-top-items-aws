@@ -1,6 +1,6 @@
 from mysql.connector.pooling import PooledMySQLConnection
 
-from src.spotify_service import TopItemsData
+from spotify_service import TopItemsData
 
 
 class DBService:
