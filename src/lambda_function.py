@@ -86,6 +86,8 @@ async def main(event):
     collected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     for top_items_data in all_top_items_data:
+        for top_item in top_items_data.top_items:
+            print(f"ID: {top_item.id}, position: {top_item.position}")
         db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
 
     # 6. Close all connections.
