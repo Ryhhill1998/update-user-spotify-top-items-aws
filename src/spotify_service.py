@@ -39,8 +39,10 @@ class SpotifyService:
         self.client = client
 
     async def refresh_tokens(self, url: str, client_id: str, client_secret: str, refresh_token: str) -> Tokens:
+        credentials = f"{client_id}:{client_secret}"
+        auth_header = base64.b64encode(credentials.encode()).decode()
         headers = {
-            "Authorization": f"Basic {base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()}",
+            "Authorization": f"Basic {auth_header}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
         data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
@@ -59,7 +61,7 @@ class SpotifyService:
             item_type: str,
             time_range: str
     ) -> TopItemsData:
-        url = f"{base_url}/{item_type.value}"
+        url = f"{base_url}/{item_type}"
         params = {"time_range": time_range, "limit": 50}
 
         res = await self.client.get(url=url, params=params, headers={"Authorization": f"Bearer {access_token}"})
