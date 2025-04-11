@@ -6,8 +6,8 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from src.db_service import DBService
-from src.spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
+from db_service import DBService
+from spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
 
 # Extract environment variables
 SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
