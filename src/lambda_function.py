@@ -6,6 +6,8 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
+import requests
+
 from db_service import DBService
 from spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
 
@@ -98,4 +100,9 @@ async def main(event):
 
 
 def lambda_handler(event, context):
-    asyncio.run(main(event))
+    # asyncio.run(main(event))
+    res = requests.get("https://67e144d958cc6bf785251147.mockapi.io/users")
+    print(f"{res = }")
+    res.raise_for_status()
+    data = res.json()
+    print(f"{data = }")
