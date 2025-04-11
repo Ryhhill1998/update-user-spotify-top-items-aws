@@ -101,8 +101,10 @@ import requests
 
 def lambda_handler(event, context):
     # asyncio.run(main(event))
-    res = requests.get("https://genius.com/Chri-tian-gate-numb-lyrics")
+    res = requests.get("https://spotify-themes-analyser-api-837536428503.europe-west1.run.app")
     print(f"{res = }")
     res.raise_for_status()
-    data = res.text
+    data = res.json()
     print(f"{data = }")
+
+lambda_handler("", "")
