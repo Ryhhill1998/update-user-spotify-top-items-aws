@@ -49,7 +49,7 @@ class SpotifyService:
 
         res = await self.client.post(url=url, headers=headers, data=data)
         res.raise_for_status()
-        token_data = res.json()
+        token_data = await res.json()
 
         refreshed_tokens = Tokens(**token_data)
         return refreshed_tokens
@@ -66,7 +66,7 @@ class SpotifyService:
 
         res = await self.client.get(url=url, params=params, headers={"Authorization": f"Bearer {access_token}"})
         res.raise_for_status()
-        data = res.json()
+        data = await res.json()
 
         top_items_data = data["items"]
         top_items = [TopItem(id=entry["id"], position=index + 1) for index, entry in enumerate(top_items_data)]
