@@ -15,10 +15,10 @@ SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
 SPOTIFY_CLIENT_SECRET = os.environ["SPOTIFY_CLIENT_SECRET"]
 SPOTIFY_AUTH_BASE_URL = os.environ["SPOTIFY_AUTH_BASE_URL"]
 SPOTIFY_DATA_BASE_URL = os.environ["SPOTIFY_DATA_BASE_URL"]
-DB_HOST = os.environ["DB_HOST"]
-DB_NAME = os.environ["DB_NAME"]
-DB_USER = os.environ["DB_USER"]
-DB_PASS = os.environ["DB_PASS"]
+# DB_HOST = os.environ["DB_HOST"]
+# DB_NAME = os.environ["DB_NAME"]
+# DB_USER = os.environ["DB_USER"]
+# DB_PASS = os.environ["DB_PASS"]
 
 
 @dataclass
@@ -59,8 +59,8 @@ async def main(event):
     client = httpx.AsyncClient()
     spotify_service = SpotifyService(client)
 
-    connection = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
-    db_service = DBService(connection)
+    # connection = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+    # db_service = DBService(connection)
 
     # 1. Get user_id and refresh_token from event records
     user = get_user_data_from_event(event)
@@ -76,8 +76,8 @@ async def main(event):
     print(f"{tokens.access_token = }")
 
     # 3. If new refresh_token is returned, update it in the DB.
-    if tokens.refresh_token is not None:
-        db_service.update_refresh_token(user_id=user.id, refresh_token=tokens.refresh_token)
+    # if tokens.refresh_token is not None:
+    #     db_service.update_refresh_token(user_id=user.id, refresh_token=tokens.refresh_token)
 
     # 4. Get user's top artists and tracks from Spotify API for all time ranges.
     all_top_items_data = await get_user_top_items_data_for_all_time_ranges(
@@ -91,11 +91,11 @@ async def main(event):
     for top_items_data in all_top_items_data:
         for top_item in top_items_data.top_items:
             print(f"ID: {top_item.id}, position: {top_item.position}")
-        db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
+        # db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
 
     # 6. Close all connections.
     await client.aclose()
-    connection.close()
+    # connection.close()
 
 
 def lambda_handler(event, context):
