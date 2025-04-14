@@ -30,8 +30,7 @@ class User:
 def get_user_data_from_event(event: dict) -> User:
     record = event["Records"][0]
     data = json.loads(record["body"])
-    print(f"{data = }")
-    user = User(id=data["user_id"], refresh_token=data["refresh_token"])
+    user = User(id=data["id"], refresh_token=data["refresh_token"])
     return user
 
 
@@ -74,9 +73,11 @@ async def main(event):
             client_secret=SPOTIFY_CLIENT_SECRET,
             refresh_token=user.refresh_token
         )
+        print(f"{tokens = }")
 
         # 3. If new refresh_token is returned, update it in the DB.
         if tokens.refresh_token is not None:
+            print(f"Updating refresh token")
             db_service.update_refresh_token(user_id=user.id, refresh_token=tokens.refresh_token)
 
         # 4. Get user's top artists and tracks from Spotify API for all time ranges.
@@ -84,13 +85,14 @@ async def main(event):
             spotify_service=spotify_service,
             access_token=tokens.access_token
         )
+        print(f"{all_top_items_data = }")
 
         # 5. Store all top items in DB.
         collected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         for top_items_data in all_top_items_data:
-            for top_item in top_items_data.top_items:
-                print(f"ID: {top_item.id}, position: {top_item.position}")
+            print(f"{top_items_data = }")
+
             db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
     except Exception as e:
         print(f"Something went wrong - {e}")
