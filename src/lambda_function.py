@@ -30,6 +30,7 @@ class User:
 def get_user_data_from_event(event: dict) -> User:
     record = event["Records"][0]
     data = json.loads(record["body"])
+    print(f"{data = }")
     user = User(id=data["user_id"], refresh_token=data["refresh_token"])
     return user
 
@@ -64,6 +65,7 @@ async def main(event):
 
         # 1. Get user_id and refresh_token from event records
         user = get_user_data_from_event(event)
+        print(f"{user = }")
 
         # 2. Refresh user's access_token to Spotify API using refresh_token.
         tokens = await spotify_service.refresh_tokens(
