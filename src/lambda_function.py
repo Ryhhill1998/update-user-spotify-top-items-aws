@@ -6,6 +6,8 @@ import boto3
 import httpx
 import asyncio
 
+from botocore.client import BaseClient
+
 from spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
 from src.models import User
 
@@ -44,6 +46,23 @@ async def get_user_top_items_data_for_all_time_ranges(
     return all_top_items
 
 
+def add_user_spotify_data_to_queue(
+        sqs: BaseClient,
+        queue_url: str,
+        user_id: str,
+        refresh_token: str,
+        all_top_items_data: list[TopItemsData]
+):
+    message_data = {
+        "user_id": user_id,
+        "refresh_token": refresh_token,
+        "all_top_items_data": [asdict(entry) for entry in all_top_items_data]
+    }
+    message = json.dumps(message_data)
+    res = sqs.send_message(QueueUrl=queue_url, MessageBody=message)
+    print(f"{res = }")
+
+
 async def main(event):
     client = httpx.AsyncClient()
 
@@ -73,14 +92,13 @@ async def main(event):
         print(f"{all_top_items_data = }")
 
         # 4. Add user Spotify data to SQS queue
-        message_data = {
-            "user_id": user.id,
-            "refresh_token": tokens.refresh_token,
-            "all_top_items_data": [asdict(entry) for entry in all_top_items_data]
-        }
-        message = json.dumps(message_data)
-        res = sqs.send_message(QueueUrl=QUEUE_URL, MessageBody=message)
-        print(f"{res = }")
+        add_user_spotify_data_to_queue(
+            sqs=sqs,
+            queue_url=QUEUE_URL,
+            user_id=user.id,
+            refresh_token=tokens.refresh_token,
+            all_top_items_data=all_top_items_data
+        )
     except Exception as e:
         print(f"Something went wrong - {e}")
     finally:
