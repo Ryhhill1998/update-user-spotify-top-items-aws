@@ -1,14 +1,11 @@
 import json
 import os
+
 import httpx
-import mysql.connector
 import asyncio
-from dataclasses import dataclass
-from datetime import datetime, timezone
 
-
-from db_service import DBService
 from spotify_service import SpotifyService, TimeRange, ItemType, TopItemsData
+from src.models import User
 
 # Extract environment variables
 SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
@@ -19,12 +16,6 @@ DB_HOST = os.environ["DB_HOST"]
 DB_NAME = os.environ["DB_NAME"]
 DB_USER = os.environ["DB_USER"]
 DB_PASS = os.environ["DB_PASS"]
-
-
-@dataclass
-class User:
-    id: str
-    refresh_token: str
 
 
 def get_user_data_from_event(event: dict) -> User:
@@ -56,11 +47,9 @@ async def get_user_top_items_data_for_all_time_ranges(
 
 async def main(event):
     client = httpx.AsyncClient()
-    connection = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
 
     try:
         spotify_service = SpotifyService(client)
-        db_service = DBService(connection)
 
         # 1. Get user_id and refresh_token from event records
         user = get_user_data_from_event(event)
@@ -75,31 +64,19 @@ async def main(event):
         )
         print(f"{tokens = }")
 
-        # 3. If new refresh_token is returned, update it in the DB.
-        if tokens.refresh_token is not None:
-            print(f"Updating refresh token")
-            db_service.update_refresh_token(user_id=user.id, refresh_token=tokens.refresh_token)
-
-        # 4. Get user's top artists and tracks from Spotify API for all time ranges.
+        # 3. Get user's top artists and tracks from Spotify API for all time ranges.
         all_top_items_data = await get_user_top_items_data_for_all_time_ranges(
             spotify_service=spotify_service,
             access_token=tokens.access_token
         )
         print(f"{all_top_items_data = }")
 
-        # 5. Store all top items in DB.
-        collected_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-        for top_items_data in all_top_items_data:
-            print(f"{top_items_data = }")
-
-            db_service.store_top_items(user_id=user.id, top_items_data=top_items_data, collected_date=collected_date)
+        # 4. Add user Spotify data to SQS queue
     except Exception as e:
         print(f"Something went wrong - {e}")
     finally:
-        # 6. Close all connections.
+        # 5. Close http connection.
         await client.aclose()
-        connection.close()
 
 
 def lambda_handler(event, context):

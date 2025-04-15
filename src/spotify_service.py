@@ -1,37 +1,7 @@
 import base64
 import httpx
-from enum import Enum
-from dataclasses import dataclass
 
-
-class ItemType(Enum):
-    ARTIST = "artist"
-    TRACK = "track"
-
-
-class TimeRange(Enum):
-    SHORT = "short_term"
-    MEDIUM = "medium_term"
-    LONG = "long_term"
-
-
-@dataclass
-class Tokens:
-    access_token: str
-    refresh_token: str | None = None
-
-
-@dataclass
-class TopItem:
-    id: str
-    position: int
-
-
-@dataclass
-class TopItemsData:
-    top_items: list[TopItem]
-    item_type: ItemType
-    time_range: TimeRange
+from src.models import Tokens, ItemType, TimeRange, TopItemsData, TopItem
 
 
 class SpotifyService:
@@ -64,7 +34,7 @@ class SpotifyService:
             item_type: ItemType,
             time_range: TimeRange
     ) -> TopItemsData:
-        url = f"{base_url}/{item_type.value}s"
+        url = f"{base_url}/{item_type.value}"
         params = {"time_range": time_range.value, "limit": 50}
 
         res = await self.client.get(url=url, params=params, headers={"Authorization": f"Bearer {access_token}"})
