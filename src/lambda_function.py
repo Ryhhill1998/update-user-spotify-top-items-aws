@@ -1,6 +1,8 @@
 import json
 import os
+from dataclasses import asdict
 
+import boto3
 import httpx
 import asyncio
 
@@ -18,7 +20,7 @@ QUEUE_URL = os.environ.get("QUEUE_URL")
 def get_user_data_from_event(event: dict) -> User:
     record = event["Records"][0]
     data = json.loads(record["body"])
-    user = User(id=data["id"], refresh_token=data["refresh_token"])
+    user = User(id=data["user_id"], refresh_token=data["refresh_token"])
     return user
 
 
@@ -47,6 +49,8 @@ async def main(event):
 
     try:
         spotify_service = SpotifyService(client)
+        # create sqs connection
+        sqs = boto3.client("sqs")
 
         # 1. Get user_id and refresh_token from event records
         user = get_user_data_from_event(event)
@@ -69,6 +73,14 @@ async def main(event):
         print(f"{all_top_items_data = }")
 
         # 4. Add user Spotify data to SQS queue
+        message_data = {
+            "user_id": user.id,
+            "refresh_token": tokens.refresh_token,
+            "all_top_items_data": [asdict(entry) for entry in all_top_items_data]
+        }
+        message = json.dumps(message_data)
+        res = sqs.send_message(QueueUrl=QUEUE_URL, MessageBody=message)
+        print(f"{res = }")
     except Exception as e:
         print(f"Something went wrong - {e}")
     finally:
