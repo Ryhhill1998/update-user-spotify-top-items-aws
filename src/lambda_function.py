@@ -12,10 +12,7 @@ SPOTIFY_CLIENT_ID = os.environ["SPOTIFY_CLIENT_ID"]
 SPOTIFY_CLIENT_SECRET = os.environ["SPOTIFY_CLIENT_SECRET"]
 SPOTIFY_AUTH_BASE_URL = os.environ["SPOTIFY_AUTH_BASE_URL"]
 SPOTIFY_DATA_BASE_URL = os.environ["SPOTIFY_DATA_BASE_URL"]
-DB_HOST = os.environ["DB_HOST"]
-DB_NAME = os.environ["DB_NAME"]
-DB_USER = os.environ["DB_USER"]
-DB_PASS = os.environ["DB_PASS"]
+QUEUE_URL = os.environ.get("QUEUE_URL")
 
 
 def get_user_data_from_event(event: dict) -> User:

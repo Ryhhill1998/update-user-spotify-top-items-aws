@@ -34,7 +34,7 @@ class SpotifyService:
             item_type: ItemType,
             time_range: TimeRange
     ) -> TopItemsData:
-        url = f"{base_url}/{item_type.value}"
+        url = f"{base_url}/{item_type.value}s"
         params = {"time_range": time_range.value, "limit": 50}
 
         res = await self.client.get(url=url, params=params, headers={"Authorization": f"Bearer {access_token}"})

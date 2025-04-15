@@ -3,8 +3,8 @@ from dataclasses import dataclass
 
 
 class ItemType(Enum):
-    ARTISTS = "artists"
-    TRACKS = "tracks"
+    ARTIST = "artist"
+    TRACK = "track"
 
 
 class TimeRange(Enum):
