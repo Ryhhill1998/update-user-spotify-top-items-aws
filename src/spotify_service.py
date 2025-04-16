@@ -3,7 +3,6 @@ import base64
 
 from loguru import logger
 import httpx
-from httpx import Response
 
 from src.models import Tokens, ItemType, TimeRange, TopItemsData, TopItem, UserSpotifyData
 
@@ -30,6 +29,7 @@ class SpotifyService:
 
     async def _make_request(self, method: str, url: str, **kwargs):
         try:
+            logger.info(f"Sending {method} request to {url}")
             res = await self.client.request(method, url, **kwargs)
             res.raise_for_status()
             return res.json()
@@ -64,6 +64,8 @@ class SpotifyService:
         return tokens
 
     async def _get_top_items(self, access_token: str, item_type: ItemType, time_range: TimeRange) -> TopItemsData:
+        logger.info(f"Fetching top {item_type}s for time range: {time_range}")
+
         url = f"{self.data_base_url}/me/top/{item_type.value}s"
         params = {"time_range": time_range.value, "limit": 50}
 
@@ -80,22 +82,29 @@ class SpotifyService:
         return top_items
 
     async def _get_all_top_items(self, access_token: str) -> list[TopItemsData]:
-        tasks = []
+        logger.info(f"Fetching top items for all item types and time ranges")
 
-        for time_range in TimeRange:
-            for item_type in ItemType:
-                get_top_items_task = self._get_top_items(
-                    access_token=access_token,
-                    item_type=item_type,
-                    time_range=time_range
-                )
-                tasks.append(get_top_items_task)
+        tasks = [
+            self._get_top_items(
+                access_token=access_token,
+                item_type=item_type,
+                time_range=time_range
+            )
+            for time_range in TimeRange
+            for item_type in ItemType
+        ]
 
         all_top_items = await asyncio.gather(*tasks)
         return all_top_items
 
     async def get_user_spotify_data(self, refresh_token: str) -> UserSpotifyData:
         tokens = await self._refresh_tokens(refresh_token)
+        logger.debug(f"Tokens: {tokens}")
+
         all_top_items = await self._get_all_top_items(tokens.access_token)
+        logger.debug(f"All top items: {all_top_items}")
+
         user_spotify_data = UserSpotifyData(refresh_token=tokens.refresh_token, data=all_top_items)
+        logger.debug(f"User spotify data: {user_spotify_data}")
+
         return user_spotify_data
