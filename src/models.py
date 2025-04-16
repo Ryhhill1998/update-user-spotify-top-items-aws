@@ -14,6 +14,15 @@ class TimeRange(Enum):
 
 
 @dataclass
+class Settings:
+    spotify_client_id: str
+    spotify_client_secret: str
+    spotify_auth_base_url: str
+    spotify_data_base_url: str
+    queue_url: str
+
+
+@dataclass
 class User:
     id: str
     refresh_token: str
@@ -36,3 +45,9 @@ class TopItemsData:
     top_items: list[TopItem]
     item_type: ItemType
     time_range: TimeRange
+
+
+@dataclass
+class UserSpotifyData:
+    refresh_token: str
+    data: list[TopItemsData]
