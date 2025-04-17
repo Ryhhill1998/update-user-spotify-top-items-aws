@@ -8,8 +8,8 @@ import boto3
 from botocore.client import BaseClient
 
 
-from spotify_service import SpotifyService, TopItemsData
-from src.models import User, Settings
+from spotify_service import SpotifyService
+from src.models import User, Settings, UserSpotifyData
 
 
 def get_settings() -> Settings:
@@ -41,13 +41,13 @@ def add_user_spotify_data_to_queue(
         sqs: BaseClient,
         queue_url: str,
         user_id: str,
-        refresh_token: str,
-        all_top_items_data: list[TopItemsData]
+        user_spotify_data: UserSpotifyData
 ):
     message_data = {
         "user_id": user_id,
-        "refresh_token": refresh_token,
-        "all_top_items_data": [asdict(entry) for entry in all_top_items_data]
+        "refresh_token": user_spotify_data.refresh_token,
+        "top_artists_data": [asdict(entry) for entry in user_spotify_data.top_artists_data],
+        "top_tracks_data": [asdict(entry) for entry in user_spotify_data.top_tracks_data],
     }
     message = json.dumps(message_data)
     res = sqs.send_message(QueueUrl=queue_url, MessageBody=message)
@@ -74,8 +74,7 @@ async def main(event):
         sqs=sqs,
         queue_url=settings.queue_url,
         user_id=user.id,
-        refresh_token=user_spotify_data.refresh_token,
-        all_top_items_data=user_spotify_data.data
+        user_spotify_data=user_spotify_data
     )
 
 

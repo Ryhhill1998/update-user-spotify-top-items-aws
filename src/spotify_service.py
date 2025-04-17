@@ -81,8 +81,8 @@ class SpotifyService:
         top_items = TopItemsData(top_items=top_items, item_type=item_type, time_range=time_range)
         return top_items
 
-    async def _get_all_top_items(self, access_token: str) -> list[TopItemsData]:
-        logger.info(f"Fetching top items for all item types and time ranges")
+    async def _get_all_top_items(self, access_token: str, item_type: ItemType) -> list[TopItemsData]:
+        logger.info(f"Fetching top {item_type}s for all time ranges")
 
         tasks = [
             self._get_top_items(
@@ -91,7 +91,6 @@ class SpotifyService:
                 time_range=time_range
             )
             for time_range in TimeRange
-            for item_type in ItemType
         ]
 
         all_top_items = await asyncio.gather(*tasks)
@@ -101,10 +100,17 @@ class SpotifyService:
         tokens = await self._refresh_tokens(refresh_token)
         logger.debug(f"Tokens: {tokens}")
 
-        all_top_items = await self._get_all_top_items(tokens.access_token)
-        logger.debug(f"All top items: {all_top_items}")
+        all_top_artists = await self._get_all_top_items(access_token=tokens.access_token, item_type=ItemType.ARTIST)
+        logger.debug(f"All top artists: {all_top_artists}")
 
-        user_spotify_data = UserSpotifyData(refresh_token=tokens.refresh_token, data=all_top_items)
+        all_top_tracks = await self._get_all_top_items(access_token=tokens.access_token, item_type=ItemType.TRACK)
+        logger.debug(f"All top tracks: {all_top_tracks}")
+
+        user_spotify_data = UserSpotifyData(
+            refresh_token=tokens.refresh_token,
+            top_artists_data=all_top_artists,
+            top_tracks_data=all_top_tracks
+        )
         logger.debug(f"User spotify data: {user_spotify_data}")
 
         return user_spotify_data

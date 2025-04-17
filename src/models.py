@@ -41,13 +41,19 @@ class TopItem:
 
 
 @dataclass
-class TopItemsData:
-    top_items: list[TopItem]
-    item_type: ItemType
+class TopArtistsData:
+    top_artists: list[TopItem]
+    time_range: TimeRange
+
+
+@dataclass
+class TopTracksData:
+    top_tracks: list[TopItem]
     time_range: TimeRange
 
 
 @dataclass
 class UserSpotifyData:
     refresh_token: str
-    data: list[TopItemsData]
+    top_artists_data: list[TopArtistsData]
+    top_tracks_data: list[TopTracksData]
