@@ -4,7 +4,7 @@ import base64
 from loguru import logger
 import httpx
 
-from src.models import Tokens, ItemType, TimeRange, TopItemsData, TopItem, UserSpotifyData
+from .models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
 
 
 class SpotifyServiceException(Exception):
@@ -78,7 +78,7 @@ class SpotifyService:
 
         top_items_data = data["items"]
         top_items = [TopItem(id=entry["id"], position=index + 1) for index, entry in enumerate(top_items_data)]
-        top_items = TopItemsData(top_items=top_items, item_type=item_type, time_range=time_range)
+        top_items = TopItemsData(top_items=top_items, time_range=time_range)
         return top_items
 
     async def _get_all_top_items(self, access_token: str, item_type: ItemType) -> list[TopItemsData]:

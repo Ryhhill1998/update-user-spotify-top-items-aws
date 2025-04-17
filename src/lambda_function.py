@@ -8,8 +8,8 @@ import boto3
 from botocore.client import BaseClient
 
 
-from spotify_service import SpotifyService
-from src.models import User, Settings, UserSpotifyData
+from .spotify_service import SpotifyService
+from .models import User, Settings, UserSpotifyData
 
 
 def get_settings() -> Settings:
