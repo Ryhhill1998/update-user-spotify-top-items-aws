@@ -37,7 +37,7 @@ class SpotifyService:
             if e.response.status_code == 401:
                 error_message = "Unauthorised API request"
             else:
-                error_message = "Unsuccessful API response"
+                error_message = "Unsuccessful API request"
 
             logger.error(f"{error_message} - {e}")
             raise SpotifyServiceException(error_message)
@@ -57,11 +57,16 @@ class SpotifyService:
 
         token_data = await self._make_request(method="POST", url=self.auth_url, headers=headers, data=data)
 
-        tokens = Tokens(
-            access_token=token_data["access_token"],
-            refresh_token=token_data.get("refresh_token")
-        )
-        return tokens
+        try:
+            tokens = Tokens(
+                access_token=token_data["access_token"],
+                refresh_token=token_data.get("refresh_token")
+            )
+            return tokens
+        except KeyError as e:
+            error_message = "No access_token present in API response"
+            logger.error(f"{error_message} - {e}")
+            raise SpotifyServiceException(error_message)
 
     async def _get_top_items(self, access_token: str, item_type: ItemType, time_range: TimeRange) -> TopItemsData:
         logger.info(f"Fetching top {item_type}s for time range: {time_range}")
@@ -76,10 +81,19 @@ class SpotifyService:
             headers={"Authorization": f"Bearer {access_token}"}
         )
 
-        top_items_data = data["items"]
-        top_items = [TopItem(id=entry["id"], position=index + 1) for index, entry in enumerate(top_items_data)]
-        top_items = TopItemsData(top_items=top_items, time_range=time_range)
-        return top_items
+        try:
+            top_items_data = data["items"]
+            top_items = [TopItem(id=entry["id"], position=index + 1) for index, entry in enumerate(top_items_data)]
+
+            if not top_items:
+                raise SpotifyServiceException("No top items found")
+
+            top_items = TopItemsData(top_items=top_items, time_range=time_range)
+            return top_items
+        except KeyError as e:
+            error_message = "API response data in unexpected format"
+            logger.error(f"{error_message} - {e}")
+            raise SpotifyServiceException(error_message)
 
     async def _get_all_top_items(self, access_token: str, item_type: ItemType) -> list[TopItemsData]:
         logger.info(f"Fetching top {item_type}s for all time ranges")
