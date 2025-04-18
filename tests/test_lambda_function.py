@@ -1,10 +1,13 @@
+import json
 import os
+import uuid
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 
-from src.lambda_function import get_user_data_from_event, get_settings
-from src.models import User, Settings
+from src.lambda_function import get_user_data_from_event, get_settings, add_user_spotify_data_to_queue
+from src.models import User, Settings, UserSpotifyData, TopItemsData, TopItem, TimeRange
 
 
 @pytest.fixture
@@ -46,8 +49,185 @@ def test_get_user_data_from_event():
 
 
 def test_add_user_spotify_data_to_queue():
-    pass
+    mock_sqs = Mock()
+    mock_send_message = Mock()
+    mock_send_message.return_value = None
+    mock_sqs.send_message = mock_send_message
+    queue_url = "test"
+    user_id = str(uuid.uuid4())
+    refresh_token = str(uuid.uuid4())
+    user_spotify_data = UserSpotifyData(
+        refresh_token=refresh_token,
+        top_artists_data=[
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.SHORT
+            ),
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.MEDIUM
+            ),
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.LONG
+            )
+        ],
+        top_tracks_data=[
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.SHORT
+            ),
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.MEDIUM
+            ),
+            TopItemsData(
+                top_items=[
+                    TopItem(id="1", position=1),
+                    TopItem(id="2", position=2),
+                    TopItem(id="3", position=3),
+                ],
+                time_range=TimeRange.LONG
+            )
+        ]
+    )
 
+    add_user_spotify_data_to_queue(
+        sqs=mock_sqs,
+        queue_url=queue_url,
+        user_id=user_id,
+        user_spotify_data=user_spotify_data
+    )
 
-def test_main():
-    pass
+    expected_message_data = {
+        "user_id": user_id,
+        "refresh_token": refresh_token,
+        "top_artists_data": [
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "short_term"
+            },
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "medium_term"
+            },
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "long_term"
+            }
+        ],
+        "top_tracks_data": [
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "short_term"
+            },
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "medium_term"
+            },
+            {
+                "top_items": [
+                    {
+                        "id": "1",
+                        "position": 1
+                    },
+                    {
+                        "id": "2",
+                        "position": 2
+                    },
+                    {
+                        "id": "3",
+                        "position": 3
+                    }
+                ],
+                "time_range": "long_term"
+            }
+        ]
+    }
+    expected_message = json.dumps(expected_message_data)
+    mock_send_message.assert_called_once_with(QueueUrl=queue_url, MessageBody=expected_message)

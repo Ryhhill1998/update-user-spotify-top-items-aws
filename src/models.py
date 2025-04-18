@@ -2,12 +2,12 @@ from enum import Enum
 from dataclasses import dataclass
 
 
-class ItemType(Enum):
+class ItemType(str, Enum):
     ARTIST = "artist"
     TRACK = "track"
 
 
-class TimeRange(Enum):
+class TimeRange(str, Enum):
     SHORT = "short_term"
     MEDIUM = "medium_term"
     LONG = "long_term"
