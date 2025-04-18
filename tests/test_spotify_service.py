@@ -3,7 +3,7 @@ from unittest.mock import Mock, AsyncMock
 import httpx
 import pytest
 
-from src.models import Tokens, ItemType, TimeRange, TopItem, TopItemsData
+from src.models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
 from src.spotify_service import SpotifyService, SpotifyServiceException
 
 
@@ -299,6 +299,59 @@ async def test__get_all_top_items_returns_expected_data(
     assert all_top_items == expected_all_top_items
 
 
+@pytest.fixture
+def mock_all_top_items_data() -> list[TopItemsData]:
+    return [
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.SHORT
+        ),
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.MEDIUM
+        ),
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.LONG
+        )
+    ]
+
+
 @pytest.mark.asyncio
-async def test_get_user_spotify_data():
-    pass
+async def test_get_user_spotify_data_returns_expected_spotify_user_data(
+        mock_spotify_service,
+        mock_all_top_items_data
+):
+    mock__refresh_tokens = AsyncMock()
+    mock__refresh_tokens.return_value = Tokens(access_token="abc", refresh_token="def")
+    mock_spotify_service._refresh_tokens = mock__refresh_tokens
+    mock__get_all_top_items = AsyncMock()
+    mock__get_all_top_items.return_value = mock_all_top_items_data
+    mock_spotify_service._get_all_top_items = mock__get_all_top_items
+
+    user_spotify_data = await mock_spotify_service.get_user_spotify_data(refresh_token="")
+
+    expected_user_spotify_data = UserSpotifyData(
+        refresh_token="def",
+        top_artists_data=mock_all_top_items_data,
+        top_tracks_data=mock_all_top_items_data
+    )
+    assert user_spotify_data == expected_user_spotify_data
