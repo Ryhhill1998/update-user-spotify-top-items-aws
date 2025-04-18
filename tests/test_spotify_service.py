@@ -242,8 +242,61 @@ async def test__get_top_items_returns_expected_top_items_data(
 
 
 @pytest.mark.asyncio
-async def test__get_all_top_items():
-    pass
+async def test__get_all_top_items_raises_exception_if_any_tasks_fail(mock_spotify_service):
+    mock__get_top_items = AsyncMock()
+    mock__get_top_items.side_effect = SpotifyServiceException("test")
+    mock_spotify_service._get_top_items = mock__get_top_items
+
+    with pytest.raises(SpotifyServiceException) as e:
+        await mock_spotify_service._get_all_top_items(access_token="", item_type=ItemType.TRACK)
+
+    assert "test" in str(e.value)
+
+
+@pytest.mark.asyncio
+async def test__get_all_top_items_returns_expected_data(
+        mock_spotify_service,
+        mock__make_request,
+        mock_top_items_data
+):
+    mock__make_request.return_value = mock_top_items_data
+    mock_spotify_service._make_request = mock__make_request
+
+    all_top_items = await mock_spotify_service._get_all_top_items(access_token="", item_type=ItemType.TRACK)
+
+    expected_all_top_items = [
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.SHORT
+        ),
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.MEDIUM
+        ),
+        TopItemsData(
+            top_items=[
+                TopItem(id="1", position=1),
+                TopItem(id="2", position=2),
+                TopItem(id="3", position=3),
+                TopItem(id="4", position=4),
+                TopItem(id="5", position=5)
+            ],
+            time_range=TimeRange.LONG
+        )
+    ]
+    assert all_top_items == expected_all_top_items
 
 
 @pytest.mark.asyncio
