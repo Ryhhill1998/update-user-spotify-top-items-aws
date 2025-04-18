@@ -6,6 +6,7 @@ import httpx
 import asyncio
 import boto3
 from botocore.client import BaseClient
+from loguru import logger
 
 
 from .spotify_service import SpotifyService
@@ -13,6 +14,7 @@ from .models import User, Settings, UserSpotifyData
 
 
 def get_settings() -> Settings:
+    logger.info("Loading environment settings")
     spotify_client_id = os.environ["SPOTIFY_CLIENT_ID"]
     spotify_client_secret = os.environ["SPOTIFY_CLIENT_SECRET"]
     spotify_auth_base_url = os.environ["SPOTIFY_AUTH_BASE_URL"]
@@ -27,13 +29,18 @@ def get_settings() -> Settings:
         queue_url=queue_url
     )
 
+    logger.debug(f"Setting extracted from environment: {settings}")
+
     return settings
 
 
 def get_user_data_from_event(event: dict) -> User:
+    logger.info("Extracting user data from event")
+    logger.debug(f"Event received: {event}")
     record = event["Records"][0]
     data = json.loads(record["body"])
     user = User(id=data["user_id"], refresh_token=data["refresh_token"])
+    logger.debug(f"Extracted user: {user}")
     return user
 
 
@@ -43,6 +50,7 @@ def add_user_spotify_data_to_queue(
         user_id: str,
         user_spotify_data: UserSpotifyData
 ):
+    logger.info("Sending message to SQS")
     message_data = {
         "user_id": user_id,
         "refresh_token": user_spotify_data.refresh_token,
@@ -50,8 +58,9 @@ def add_user_spotify_data_to_queue(
         "top_tracks_data": [asdict(entry) for entry in user_spotify_data.top_tracks_data],
     }
     message = json.dumps(message_data)
+    logger.debug(f"Message being sent: {message}")
     res = sqs.send_message(QueueUrl=queue_url, MessageBody=message)
-    print(f"{res = }")
+    logger.info(f"Message sent. SQS response: {res}")
 
 
 async def main(event):
