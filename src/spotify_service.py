@@ -18,13 +18,13 @@ class SpotifyService:
             client: httpx.AsyncClient,
             client_id: str,
             client_secret: str,
-            auth_url: str,
+            auth_base_url: str,
             data_base_url: str
     ):
         self.client = client
         self.client_id = client_id
         self.client_secret = client_secret
-        self.auth_url = auth_url
+        self.auth_base_url = auth_base_url
         self.data_base_url = data_base_url
 
     async def _make_request(self, method: str, url: str, **kwargs):
@@ -47,6 +47,7 @@ class SpotifyService:
             raise SpotifyServiceException(error_message)
 
     async def _refresh_tokens(self, refresh_token: str) -> Tokens:
+        url = f"{self.auth_base_url}/api/token"
         credentials = f"{self.client_id}:{self.client_secret}"
         auth_header = base64.b64encode(credentials.encode()).decode()
         headers = {
@@ -55,7 +56,7 @@ class SpotifyService:
         }
         data = {"grant_type": "refresh_token", "refresh_token": refresh_token}
 
-        token_data = await self._make_request(method="POST", url=self.auth_url, headers=headers, data=data)
+        token_data = await self._make_request(method="POST", url=url, headers=headers, data=data)
 
         try:
             tokens = Tokens(

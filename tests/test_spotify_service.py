@@ -32,7 +32,7 @@ def mock_client() -> Mock:
 
 @pytest.fixture
 def mock_spotify_service(mock_client) -> SpotifyService:
-    return SpotifyService(client=mock_client, client_id="", client_secret="", auth_url="", data_base_url="")
+    return SpotifyService(client=mock_client, client_id="", client_secret="", auth_base_url="", data_base_url="")
 
 
 @pytest.mark.asyncio

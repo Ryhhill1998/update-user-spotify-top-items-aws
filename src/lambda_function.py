@@ -74,7 +74,7 @@ async def main(event):
             client=client,
             client_id=settings.spotify_client_id,
             client_secret=settings.spotify_client_secret,
-            auth_url=settings.spotify_auth_base_url,
+            auth_base_url=settings.spotify_auth_base_url,
             data_base_url=settings.spotify_data_base_url
         )
 
