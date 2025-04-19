@@ -4,7 +4,7 @@ import base64
 from loguru import logger
 import httpx
 
-from .models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
+from src.models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
 
 
 class SpotifyServiceException(Exception):
