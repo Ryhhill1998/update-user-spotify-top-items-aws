@@ -67,7 +67,9 @@ async def main(event):
     settings = get_settings()
     user = get_user_data_from_event(event)
 
-    with httpx.AsyncClient() as client:
+    client = httpx.AsyncClient()
+
+    try:
         spotify_service = SpotifyService(
             client=client,
             client_id=settings.spotify_client_id,
@@ -77,6 +79,11 @@ async def main(event):
         )
 
         user_spotify_data = await spotify_service.get_user_spotify_data(user.refresh_token)
+    except Exception as e:
+        logger.error(f"Something went wrong - {e}")
+        raise
+    finally:
+        await client.aclose()
 
     sqs = boto3.client("sqs")
     add_user_spotify_data_to_queue(
