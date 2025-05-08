@@ -3,7 +3,7 @@ from unittest.mock import Mock, AsyncMock
 import httpx
 import pytest
 
-from src.models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
+from src.models import Tokens, ItemType, TimeRange, UserSpotifyData
 from src.data_service import DataService, DataServiceException
 
 
