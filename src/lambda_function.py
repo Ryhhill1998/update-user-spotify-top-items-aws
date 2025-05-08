@@ -7,27 +7,20 @@ import asyncio
 import boto3
 from botocore.client import BaseClient
 from loguru import logger
+from dotenv import load_dotenv
 
 
-from src.spotify_service import SpotifyService
+from src.data_service import DataService
 from src.models import User, Settings, UserSpotifyData
 
+load_dotenv(".env")
 
 def get_settings() -> Settings:
     logger.info("Loading environment settings")
-    spotify_client_id = os.environ["SPOTIFY_CLIENT_ID"]
-    spotify_client_secret = os.environ["SPOTIFY_CLIENT_SECRET"]
-    spotify_auth_base_url = os.environ["SPOTIFY_AUTH_BASE_URL"]
-    spotify_data_base_url = os.environ["SPOTIFY_DATA_BASE_URL"]
+    data_api_base_url = os.environ["DATA_API_BASE_URL"]
     queue_url = os.environ["QUEUE_URL"]
 
-    settings = Settings(
-        spotify_client_id=spotify_client_id,
-        spotify_client_secret=spotify_client_secret,
-        spotify_auth_base_url=spotify_auth_base_url,
-        spotify_data_base_url=spotify_data_base_url,
-        queue_url=queue_url
-    )
+    settings = Settings(data_api_base_url=data_api_base_url, queue_url=queue_url)
 
     logger.debug(f"Setting extracted from environment: {settings}")
 
@@ -56,6 +49,8 @@ def add_user_spotify_data_to_queue(
         "refresh_token": user_spotify_data.refresh_token,
         "top_artists_data": [asdict(entry) for entry in user_spotify_data.top_artists_data],
         "top_tracks_data": [asdict(entry) for entry in user_spotify_data.top_tracks_data],
+        "top_genres_data": [asdict(entry) for entry in user_spotify_data.top_genres_data],
+        "top_emotions_data": [asdict(entry) for entry in user_spotify_data.top_emotions_data],
     }
     message = json.dumps(message_data)
     logger.debug(f"Message being sent: {message}")
@@ -70,15 +65,10 @@ async def main(event):
     client = httpx.AsyncClient()
 
     try:
-        spotify_service = SpotifyService(
-            client=client,
-            client_id=settings.spotify_client_id,
-            client_secret=settings.spotify_client_secret,
-            auth_base_url=settings.spotify_auth_base_url,
-            data_base_url=settings.spotify_data_base_url
-        )
+        spotify_service = DataService(client=client, data_api_base_url=settings.data_api_base_url)
 
         user_spotify_data = await spotify_service.get_user_spotify_data(user.refresh_token)
+        print(user_spotify_data)
     except Exception as e:
         logger.error(f"Something went wrong - {e}")
         raise

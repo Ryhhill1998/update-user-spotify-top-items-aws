@@ -4,7 +4,7 @@ import httpx
 import pytest
 
 from src.models import Tokens, ItemType, TimeRange, TopItem, TopItemsData, UserSpotifyData
-from src.spotify_service import SpotifyService, SpotifyServiceException
+from src.data_service import DataService, DataServiceException
 
 
 @pytest.fixture
@@ -31,8 +31,8 @@ def mock_client() -> Mock:
 
 
 @pytest.fixture
-def mock_spotify_service(mock_client) -> SpotifyService:
-    return SpotifyService(client=mock_client, client_id="", client_secret="", auth_base_url="", data_base_url="")
+def mock_spotify_service(mock_client) -> DataService:
+    return DataService(client=mock_client, client_id="", client_secret="", auth_base_url="", data_base_url="")
 
 
 @pytest.mark.asyncio
@@ -46,7 +46,7 @@ async def test__make_request_raises_spotify_service_exception_if_unauthorised_re
     mock_request.return_value = mock_response
     mock_client.request = mock_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._make_request(method="", url="")
 
     assert "Unauthorised API request" in str(e.value)
@@ -63,7 +63,7 @@ async def test__make_request_raises_spotify_service_exception_if_other_non_succe
     mock_request.return_value = mock_response
     mock_client.request = mock_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._make_request(method="", url="")
 
     assert "Unsuccessful API request" in str(e.value)
@@ -78,7 +78,7 @@ async def test__make_request_raises_spotify_service_exception_if_request_fails(
     mock_request.side_effect = httpx.RequestError(message="")
     mock_client.request = mock_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._make_request(method="", url="")
 
     assert "Failed to make API request" in str(e.value)
@@ -116,7 +116,7 @@ async def test__refresh_tokens_raises_spotify_service_exception_if_access_token_
     mock__make_request.return_value = mock_token_data
     mock_spotify_service._make_request = mock__make_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._refresh_tokens(refresh_token="abc")
 
     assert "No access_token present in API response" in str(e.value)
@@ -175,7 +175,7 @@ async def test__get_top_items_raises_spotify_service_exception_if_no_items_key_i
     mock__make_request.return_value = mock_top_items_data
     mock_spotify_service._make_request = mock__make_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
 
     assert "API response data in unexpected format" in str(e.value)
@@ -191,7 +191,7 @@ async def test__get_top_items_raises_spotify_service_exception_if_no_id_field_fo
     mock__make_request.return_value = mock_top_items_data
     mock_spotify_service._make_request = mock__make_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
 
     assert "API response data in unexpected format" in str(e.value)
@@ -207,7 +207,7 @@ async def test__get_top_items_raises_spotify_service_exception_if_items_list_is_
     mock__make_request.return_value = mock_top_items_data
     mock_spotify_service._make_request = mock__make_request
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
 
     assert "No top items found" in str(e.value)
@@ -244,10 +244,10 @@ async def test__get_top_items_returns_expected_top_items_data(
 @pytest.mark.asyncio
 async def test__get_all_top_items_raises_exception_if_any_tasks_fail(mock_spotify_service):
     mock__get_top_items = AsyncMock()
-    mock__get_top_items.side_effect = SpotifyServiceException("test")
+    mock__get_top_items.side_effect = DataServiceException("test")
     mock_spotify_service._get_top_items = mock__get_top_items
 
-    with pytest.raises(SpotifyServiceException) as e:
+    with pytest.raises(DataServiceException) as e:
         await mock_spotify_service._get_all_top_items(access_token="", item_type=ItemType.TRACK)
 
     assert "test" in str(e.value)
