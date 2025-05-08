@@ -18,9 +18,10 @@ load_dotenv(".env")
 def get_settings() -> Settings:
     logger.info("Loading environment settings")
     data_api_base_url = os.environ["DATA_API_BASE_URL"]
+    request_timeout = float(os.environ["REQUEST_TIMEOUT"])
     queue_url = os.environ["QUEUE_URL"]
 
-    settings = Settings(data_api_base_url=data_api_base_url, queue_url=queue_url)
+    settings = Settings(data_api_base_url=data_api_base_url, request_timeout=request_timeout, queue_url=queue_url)
 
     logger.debug(f"Setting extracted from environment: {settings}")
 
@@ -65,7 +66,11 @@ async def main(event):
     client = httpx.AsyncClient()
 
     try:
-        spotify_service = DataService(client=client, data_api_base_url=settings.data_api_base_url)
+        spotify_service = DataService(
+            client=client,
+            data_api_base_url=settings.data_api_base_url,
+            request_timeout=settings.request_timeout
+        )
 
         user_spotify_data = await spotify_service.get_user_spotify_data(user.refresh_token)
         print(user_spotify_data)

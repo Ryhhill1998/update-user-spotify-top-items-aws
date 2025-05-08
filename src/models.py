@@ -18,6 +18,7 @@ class TimeRange(str, Enum):
 @dataclass
 class Settings:
     data_api_base_url: str
+    request_timeout: float
     queue_url: str
 
 

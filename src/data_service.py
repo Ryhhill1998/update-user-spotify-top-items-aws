@@ -13,14 +13,15 @@ class DataServiceException(Exception):
 
 
 class DataService:
-    def __init__(self, client: httpx.AsyncClient, data_api_base_url: str):
+    def __init__(self, client: httpx.AsyncClient, data_api_base_url: str, request_timeout: float):
         self.client = client
         self.data_api_base_url = data_api_base_url
+        self.request_timeout = request_timeout
 
     async def _get_data_from_api(self, url: str, json_data: dict, params: dict | None = None):
         try:
             logger.info(f"Sending POST request to {url}")
-            res = await self.client.post(url=url, params=params, json=json_data, timeout=60.0)
+            res = await self.client.post(url=url, params=params, json=json_data, timeout=self.request_timeout)
             res.raise_for_status()
             return res.json()
         except httpx.HTTPStatusError as e:
@@ -49,33 +50,39 @@ class DataService:
             )
             return tokens
         except KeyError as e:
-            error_message = "No access_token present in API response"
-            logger.error(f"{error_message} - {e}")
+            error_message = f"No access_token present in API response - {e}"
+            logger.error(error_message)
             raise DataServiceException(error_message)
 
     @staticmethod
     def _create_top_items_data(data, item_type: ItemType, time_range: TimeRange):
-        if item_type == ItemType.ARTIST:
-            top_artists = [TopArtist(id=entry["id"], position=index + 1) for index, entry in enumerate(data)]
-            top_artists_data = TopArtistsData(top_artists=top_artists, time_range=time_range)
-            return top_artists_data
+        try:
+            if item_type == ItemType.ARTIST:
+                top_artists = [TopArtist(id=entry["id"], position=index + 1) for index, entry in enumerate(data)]
+                top_artists_data = TopArtistsData(top_artists=top_artists, time_range=time_range)
+                return top_artists_data
 
-        if item_type == ItemType.TRACK:
-            top_tracks = [TopTrack(id=entry["id"], position=index + 1) for index, entry in enumerate(data)]
-            top_tracks_data = TopTracksData(top_tracks=top_tracks, time_range=time_range)
-            return top_tracks_data
+            elif item_type == ItemType.TRACK:
+                top_tracks = [TopTrack(id=entry["id"], position=index + 1) for index, entry in enumerate(data)]
+                top_tracks_data = TopTracksData(top_tracks=top_tracks, time_range=time_range)
+                return top_tracks_data
 
-        if item_type == ItemType.GENRE:
-            top_genres = [TopGenre(name=entry["name"], count=entry["count"]) for entry in data]
-            top_genres_data = TopGenresData(top_genres=top_genres, time_range=time_range)
-            return top_genres_data
+            elif item_type == ItemType.GENRE:
+                top_genres = [TopGenre(name=entry["name"], count=entry["count"]) for entry in data]
+                top_genres_data = TopGenresData(top_genres=top_genres, time_range=time_range)
+                return top_genres_data
 
-        if item_type == ItemType.EMOTION:
-            top_emotions = [TopEmotion(name=entry["name"], percentage=entry["percentage"]) for entry in data]
-            top_emotions_data = TopEmotionsData(top_emotions=top_emotions, time_range=time_range)
-            return top_emotions_data
+            elif item_type == ItemType.EMOTION:
+                top_emotions = [TopEmotion(name=entry["name"], percentage=entry["percentage"]) for entry in data]
+                top_emotions_data = TopEmotionsData(top_emotions=top_emotions, time_range=time_range)
+                return top_emotions_data
 
-        raise ValueError("Invalid item type")
+            else:
+                raise DataServiceException("Invalid item type")
+        except KeyError as e:
+            error_message = f"Missing field in API data - {e}"
+            logger.error(error_message)
+            raise DataServiceException(error_message)
 
     async def _get_top_items_data(self, access_token: str, item_type: ItemType, time_range: TimeRange):
         logger.info(f"Fetching top {item_type}s for time range: {time_range}")
@@ -85,17 +92,9 @@ class DataService:
         params = {"time_range": time_range.value}
 
         data = await self._get_data_from_api(url=url, json_data=json_data, params=params)
+        top_items = self._create_top_items_data(data=data, item_type=item_type, time_range=time_range)
 
-        try:
-            if not data:
-                raise DataServiceException("No top items found")
-
-            top_items = self._create_top_items_data(data=data, item_type=item_type, time_range=time_range)
-            return top_items
-        except KeyError as e:
-            error_message = "API response data in unexpected format"
-            logger.error(f"{error_message} - {e}")
-            raise DataServiceException(error_message)
+        return top_items
 
     async def _get_all_top_items(self, access_token: str, item_type: ItemType):
         logger.info(f"Fetching top {item_type}s for all time ranges")
