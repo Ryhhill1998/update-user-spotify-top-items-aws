@@ -52,7 +52,7 @@ def mock_client() -> Mock:
 
 
 @pytest.fixture
-def mock_spotify_service(mock_client) -> DataService:
+def data_service(mock_client) -> DataService:
     return DataService(client=mock_client, data_api_base_url="", request_timeout=10.0)
 
 
@@ -63,7 +63,7 @@ def mock_spotify_service(mock_client) -> DataService:
     [(401, "Unauthorised API request"), (500, "Unsuccessful API request")]
 )
 async def test__get_data_from_api_raises_data_service_exception_if_http_status_error_occurs(
-        mock_spotify_service,
+        data_service,
         mock_client,
         mock_post_request,
         mock_response,
@@ -75,7 +75,7 @@ async def test__get_data_from_api_raises_data_service_exception_if_http_status_e
     mock_client.post = mock_post_request
 
     with pytest.raises(DataServiceException) as e:
-        await mock_spotify_service._get_data_from_api(url="", json_data={})
+        await data_service._get_data_from_api(url="", json_data={})
 
     assert expected_error_message in str(e.value)
 
@@ -83,7 +83,7 @@ async def test__get_data_from_api_raises_data_service_exception_if_http_status_e
 # 2. Test _get_data_from_api raises DataServiceException if httpx.RequestError occurs.
 @pytest.mark.asyncio
 async def test__get_data_from_api_raises_spotify_service_exception_if_request_error_occurs(
-        mock_spotify_service,
+        data_service,
         mock_client,
         mock_post_request
 ):
@@ -91,21 +91,22 @@ async def test__get_data_from_api_raises_spotify_service_exception_if_request_er
     mock_client.post = mock_post_request
 
     with pytest.raises(DataServiceException) as e:
-        await mock_spotify_service._get_data_from_api(url="", json_data={})
+        await data_service._get_data_from_api(url="", json_data={})
 
     assert "Failed to make API request" in str(e.value)
 
 
 # 3. Test _get_data_from_api calls client.post with expected params.
 @pytest.mark.asyncio
-async def test__get_data_from_api_raises_spotify_service_exception_if_request_error_occurs(
-        mock_spotify_service,
+async def test__get_data_from_api_calls_client_post_with_expected_params(
+        data_service,
         mock_client,
         mock_post_request
 ):
+    mock_post_request.return_value = Mock()
     mock_client.post = mock_post_request
 
-    await mock_spotify_service._get_data_from_api(url="url", json_data={"key": "value"})
+    await data_service._get_data_from_api(url="url", json_data={"key": "value"})
 
     mock_post_request.assert_called_once_with(url="url", params=None, json={"key": "value"}, timeout=10.0)
 
@@ -135,16 +136,16 @@ def mock__get_data_from_api() -> AsyncMock:
 # 4. Test _refresh_tokens raises DataServiceException if no access token returned by API.
 @pytest.mark.asyncio
 async def test__refresh_tokens_raises_spotify_service_exception_if_access_token_not_present_in_api_response(
-        mock_spotify_service,
+        data_service,
         mock__get_data_from_api,
         mock_token_data_factory
 ):
     mock_token_data = mock_token_data_factory(refresh_token="def")
     mock__get_data_from_api.return_value = mock_token_data
-    mock_spotify_service._get_data_from_api = mock__get_data_from_api
+    data_service._get_data_from_api = mock__get_data_from_api
 
     with pytest.raises(DataServiceException) as e:
-        await mock_spotify_service._refresh_tokens(refresh_token="abc")
+        await data_service._refresh_tokens(refresh_token="abc")
 
     assert "No access_token present in API response" in str(e.value)
 
@@ -156,7 +157,7 @@ async def test__refresh_tokens_raises_spotify_service_exception_if_access_token_
     [("abc", "def"), ("abc", None)]
 )
 async def test__refresh_tokens_returns_expected_tokens(
-        mock_spotify_service,
+        data_service,
         mock__get_data_from_api,
         mock_token_data_factory,
         access_token,
@@ -164,23 +165,55 @@ async def test__refresh_tokens_returns_expected_tokens(
 ):
     mock_token_data = mock_token_data_factory(access_token=access_token, refresh_token=refresh_token)
     mock__get_data_from_api.return_value = mock_token_data
-    mock_spotify_service._get_data_from_api = mock__get_data_from_api
+    data_service._get_data_from_api = mock__get_data_from_api
 
-    token_data = await mock_spotify_service._refresh_tokens(refresh_token="ghi")
+    token_data = await data_service._refresh_tokens(refresh_token="ghi")
 
     assert token_data == Tokens(access_token=access_token, refresh_token=refresh_token)
 
 
 # 6. Test _create_top_items_data raises DataServiceException if item_type invalid.
-# 7. Test _create_top_items_data raises DataServiceException if missing artist ID.
-# 8. Test _create_top_items_data raises DataServiceException if missing track ID.
-# 9. Test _create_top_items_data raises DataServiceException if missing genre name.
+def test__create_top_items_data_raises_data_service_exception_if_item_type_invalid(data_service):
+    with pytest.raises(DataServiceException, match="Invalid item type"):
+        data_service._create_top_items_data(data=[], item_type="", time_range=TimeRange.SHORT)
+
+
+# 7. Test _create_top_items_data raises DataServiceException if missing artist or track ID.
+@pytest.mark.parametrize("item_type", [ItemType.ARTIST, ItemType.TRACK])
+def test__create_top_items_data_raises_data_service_exception_if_missing_artist_or_track_id(data_service, item_type):
+    with pytest.raises(DataServiceException, match="Missing field in API data") as e:
+        data_service._create_top_items_data(data=[{}], item_type=item_type, time_range=TimeRange.SHORT)
+
+    assert "id" in str(e.value)
+
+
+# 8. Test _create_top_items_data raises DataServiceException if missing genre or emotion name.
+@pytest.mark.parametrize("item_type", [ItemType.GENRE, ItemType.EMOTION])
+def test__create_top_items_data_raises_data_service_exception_if_missing_genre_or_emotion_name(data_service, item_type):
+    with pytest.raises(DataServiceException, match="Missing field in API data") as e:
+        data_service._create_top_items_data(data=[{}], item_type=item_type, time_range=TimeRange.SHORT)
+
+    assert "name" in str(e.value)
+
+
 # 10. Test _create_top_items_data raises DataServiceException if missing genre count.
+
+
 # 11. Test _create_top_items_data raises DataServiceException if missing emotion name.
+
+
 # 12. Test _create_top_items_data raises DataServiceException if missing emotion percentage.
+
+
 # 13. Test _create_top_items_data returns expected top artists data.
+
+
 # 14. Test _create_top_items_data returns expected top tracks data.
+
+
 # 15. Test _create_top_items_data returns expected top genres data.
+
+
 # 16. Test _create_top_items_data returns expected top emotions data.
 
 

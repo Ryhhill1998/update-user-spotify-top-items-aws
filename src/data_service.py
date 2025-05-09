@@ -55,7 +55,7 @@ class DataService:
             raise DataServiceException(error_message)
 
     @staticmethod
-    def _create_top_items_data(data, item_type: ItemType, time_range: TimeRange):
+    def _create_top_items_data(data: list, item_type: ItemType, time_range: TimeRange):
         try:
             if item_type == ItemType.ARTIST:
                 top_artists = [TopArtist(id=entry["id"], position=index + 1) for index, entry in enumerate(data)]
