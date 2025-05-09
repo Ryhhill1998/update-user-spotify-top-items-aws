@@ -31,7 +31,8 @@ def get_settings() -> Settings:
 def get_user_data_from_event(event: dict) -> User:
     logger.info("Extracting user data from event")
     logger.debug(f"Event received: {event}")
-    record = event["Records"][0]
+    records = event["Records"]
+    record = records[0]
     data = json.loads(record["body"])
     user = User(id=data["user_id"], refresh_token=data["refresh_token"])
     logger.debug(f"Extracted user: {user}")
@@ -73,20 +74,20 @@ async def main(event):
         )
 
         user_spotify_data = await spotify_service.get_user_spotify_data(user.refresh_token)
-        print(user_spotify_data)
+
+        sqs = boto3.client("sqs")
+        add_user_spotify_data_to_queue(
+            sqs=sqs,
+            queue_url=settings.queue_url,
+            user_id=user.id,
+            user_spotify_data=user_spotify_data
+        )
     except Exception as e:
         logger.error(f"Something went wrong - {e}")
         raise
     finally:
+        print('hello calling close')
         await client.aclose()
-
-    sqs = boto3.client("sqs")
-    add_user_spotify_data_to_queue(
-        sqs=sqs,
-        queue_url=settings.queue_url,
-        user_id=user.id,
-        user_spotify_data=user_spotify_data
-    )
 
 
 def lambda_handler(event, context):
