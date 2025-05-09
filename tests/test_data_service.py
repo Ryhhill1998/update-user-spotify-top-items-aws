@@ -22,8 +22,7 @@ from src.data_service import DataService, DataServiceException
 
 # 10. Test _get_all_top_items calls expected methods with expected params.
 
-# 11. Test get_user_spotify_data calls expected methods with expected params.
-# 12. Test get_user_spotify_data returns expected user spotify data.
+# 11. Test get_user_spotify_data returns expected user spotify data.
 
 
 @pytest.fixture
@@ -285,212 +284,32 @@ async def test__get_all_top_items_calls_expected_methods_with_expected_params(da
     assert mock__get_top_items_data.call_count == 3
 
 
-# 11. Test get_user_spotify_data calls expected methods with expected params.
+# 11. Test get_user_spotify_data returns expected user spotify data.
+@pytest.mark.asyncio
+async def test_get_user_spotify_data_returns_expected_user_spotify_data(data_service):
+    mock__refresh_tokens = AsyncMock()
+    mock__refresh_tokens.return_value = Tokens(access_token="abc", refresh_token="def")
+    data_service._refresh_tokens = mock__refresh_tokens
+    mock__get_all_top_items = AsyncMock()
+    mock__get_all_top_items.return_value = []
+    data_service._get_all_top_items = mock__get_all_top_items
 
+    user_spotify_data = await data_service.get_user_spotify_data(refresh_token="ghi")
 
-# 12. Test get_user_spotify_data returns expected user spotify data.
-
-
-# @pytest.fixture
-# def mock_top_items_data() -> dict:
-#     return {
-#         "items": [
-#             {"id": "1"},
-#             {"id": "2"},
-#             {"id": "3"},
-#             {"id": "4"},
-#             {"id": "5"},
-#         ]
-#     }
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_top_items_raises_spotify_service_exception_if_no_items_key_in_data(
-#         mock_spotify_service,
-#         mock__make_request,
-#         mock_top_items_data
-# ):
-#     mock_top_items_data.pop("items")
-#     mock__make_request.return_value = mock_top_items_data
-#     mock_spotify_service._make_request = mock__make_request
-#
-#     with pytest.raises(DataServiceException) as e:
-#         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
-#
-#     assert "API response data in unexpected format" in str(e.value)
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_top_items_raises_spotify_service_exception_if_no_id_field_for_one_item(
-#         mock_spotify_service,
-#         mock__make_request,
-#         mock_top_items_data
-# ):
-#     mock_top_items_data["items"][0].pop("id")
-#     mock__make_request.return_value = mock_top_items_data
-#     mock_spotify_service._make_request = mock__make_request
-#
-#     with pytest.raises(DataServiceException) as e:
-#         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
-#
-#     assert "API response data in unexpected format" in str(e.value)
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_top_items_raises_spotify_service_exception_if_items_list_is_empty(
-#         mock_spotify_service,
-#         mock__make_request,
-#         mock_top_items_data
-# ):
-#     mock_top_items_data["items"] = []
-#     mock__make_request.return_value = mock_top_items_data
-#     mock_spotify_service._make_request = mock__make_request
-#
-#     with pytest.raises(DataServiceException) as e:
-#         await mock_spotify_service._get_top_items(access_token="", item_type=ItemType.TRACK, time_range=TimeRange.SHORT)
-#
-#     assert "No top items found" in str(e.value)
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_top_items_returns_expected_top_items_data(
-#         mock_spotify_service,
-#         mock__make_request,
-#         mock_top_items_data
-# ):
-#     mock__make_request.return_value = mock_top_items_data
-#     mock_spotify_service._make_request = mock__make_request
-#
-#     top_items_data = await mock_spotify_service._get_top_items(
-#         access_token="",
-#         item_type=ItemType.TRACK,
-#         time_range=TimeRange.SHORT
-#     )
-#
-#     expected_top_items_data = TopItemsData(
-#         top_items=[
-#             TopItem(id="1", position=1),
-#             TopItem(id="2", position=2),
-#             TopItem(id="3", position=3),
-#             TopItem(id="4", position=4),
-#             TopItem(id="5", position=5)
-#         ],
-#         time_range=TimeRange.SHORT
-#     )
-#     assert top_items_data == expected_top_items_data
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_all_top_items_raises_exception_if_any_tasks_fail(mock_spotify_service):
-#     mock__get_top_items = AsyncMock()
-#     mock__get_top_items.side_effect = DataServiceException("test")
-#     mock_spotify_service._get_top_items = mock__get_top_items
-#
-#     with pytest.raises(DataServiceException) as e:
-#         await mock_spotify_service._get_all_top_items(access_token="", item_type=ItemType.TRACK)
-#
-#     assert "test" in str(e.value)
-#
-#
-# @pytest.mark.asyncio
-# async def test__get_all_top_items_returns_expected_data(
-#         mock_spotify_service,
-#         mock__make_request,
-#         mock_top_items_data
-# ):
-#     mock__make_request.return_value = mock_top_items_data
-#     mock_spotify_service._make_request = mock__make_request
-#
-#     all_top_items = await mock_spotify_service._get_all_top_items(access_token="", item_type=ItemType.TRACK)
-#
-#     expected_all_top_items = [
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.SHORT
-#         ),
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.MEDIUM
-#         ),
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.LONG
-#         )
-#     ]
-#     assert all_top_items == expected_all_top_items
-#
-#
-# @pytest.fixture
-# def mock_all_top_items_data() -> list[TopItemsData]:
-#     return [
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.SHORT
-#         ),
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.MEDIUM
-#         ),
-#         TopItemsData(
-#             top_items=[
-#                 TopItem(id="1", position=1),
-#                 TopItem(id="2", position=2),
-#                 TopItem(id="3", position=3),
-#                 TopItem(id="4", position=4),
-#                 TopItem(id="5", position=5)
-#             ],
-#             time_range=TimeRange.LONG
-#         )
-#     ]
-#
-#
-# @pytest.mark.asyncio
-# async def test_get_user_spotify_data_returns_expected_spotify_user_data(
-#         mock_spotify_service,
-#         mock_all_top_items_data
-# ):
-#     mock__refresh_tokens = AsyncMock()
-#     mock__refresh_tokens.return_value = Tokens(access_token="abc", refresh_token="def")
-#     mock_spotify_service._refresh_tokens = mock__refresh_tokens
-#     mock__get_all_top_items = AsyncMock()
-#     mock__get_all_top_items.return_value = mock_all_top_items_data
-#     mock_spotify_service._get_all_top_items = mock__get_all_top_items
-#
-#     user_spotify_data = await mock_spotify_service.get_user_spotify_data(refresh_token="")
-#
-#     expected_user_spotify_data = UserSpotifyData(
-#         refresh_token="def",
-#         top_artists_data=mock_all_top_items_data,
-#         top_tracks_data=mock_all_top_items_data
-#     )
-#     assert user_spotify_data == expected_user_spotify_data
+    expected_user_spotify_data = UserSpotifyData(
+        refresh_token="def",
+        top_artists_data=[],
+        top_tracks_data=[],
+        top_genres_data=[],
+        top_emotions_data=[]
+    )
+    assert user_spotify_data == expected_user_spotify_data
+    mock__refresh_tokens.assert_called_once_with("ghi")
+    expected__get_all_top_items_calls = [
+        call(access_token="abc", item_type=ItemType.ARTIST),
+        call(access_token="abc", item_type=ItemType.TRACK),
+        call(access_token="abc", item_type=ItemType.GENRE),
+        call(access_token="abc", item_type=ItemType.EMOTION)
+    ]
+    mock__get_all_top_items.assert_has_calls(expected__get_all_top_items_calls, any_order=False)
+    assert mock__get_all_top_items.call_count == 4
