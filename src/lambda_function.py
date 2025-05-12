@@ -7,13 +7,10 @@ import asyncio
 import boto3
 from botocore.client import BaseClient
 from loguru import logger
-from dotenv import load_dotenv
-
 
 from src.data_service import DataService
 from src.models import User, Settings, UserSpotifyData
 
-load_dotenv(".env")
 
 def get_settings() -> Settings:
     logger.info("Loading environment settings")
@@ -86,7 +83,6 @@ async def main(event):
         logger.error(f"Something went wrong - {e}")
         raise
     finally:
-        print('hello calling close')
         await client.aclose()
 
 
