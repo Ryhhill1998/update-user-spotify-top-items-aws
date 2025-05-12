@@ -5,6 +5,8 @@ from dataclasses import dataclass
 class ItemType(str, Enum):
     ARTIST = "artist"
     TRACK = "track"
+    GENRE = "genre"
+    EMOTION = "emotion"
 
 
 class TimeRange(str, Enum):
@@ -15,10 +17,8 @@ class TimeRange(str, Enum):
 
 @dataclass
 class Settings:
-    spotify_client_id: str
-    spotify_client_secret: str
-    spotify_auth_base_url: str
-    spotify_data_base_url: str
+    data_api_base_url: str
+    request_timeout: float
     queue_url: str
 
 
@@ -35,19 +35,57 @@ class Tokens:
 
 
 @dataclass
-class TopItem:
+class TopArtist:
     id: str
     position: int
 
 
 @dataclass
-class TopItemsData:
-    top_items: list[TopItem]
+class TopTrack:
+    id: str
+    position: int
+
+
+@dataclass
+class TopGenre:
+    name: str
+    count: int
+
+
+@dataclass
+class TopEmotion:
+    name: str
+    percentage: float
+
+
+@dataclass
+class TopArtistsData:
+    top_artists: list[TopArtist]
+    time_range: TimeRange
+
+
+@dataclass
+class TopTracksData:
+    top_tracks: list[TopTrack]
+    time_range: TimeRange
+
+
+@dataclass
+class TopGenresData:
+    top_genres: list[TopGenre]
+    time_range: TimeRange
+
+
+@dataclass
+class TopEmotionsData:
+    top_emotions: list[TopEmotion]
     time_range: TimeRange
 
 
 @dataclass
 class UserSpotifyData:
-    refresh_token: str
-    top_artists_data: list[TopItemsData]
-    top_tracks_data: list[TopItemsData]
+    refresh_token: str | None
+    top_artists_data: list[TopArtistsData]
+    top_tracks_data: list[TopTracksData]
+    top_genres_data: list[TopGenresData]
+    top_emotions_data: list[TopEmotionsData]
