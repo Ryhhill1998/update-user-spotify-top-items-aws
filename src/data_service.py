@@ -73,7 +73,14 @@ class DataService:
                 return top_genres_data
 
             elif item_type == ItemType.EMOTION:
-                top_emotions = [TopEmotion(name=entry["name"], percentage=entry["percentage"]) for entry in data]
+                top_emotions = [
+                    TopEmotion(
+                        name=entry["name"],
+                        percentage=entry["percentage"],
+                        track_id=entry["track_id"]
+                    )
+                    for entry in data
+                ]
                 top_emotions_data = TopEmotionsData(top_emotions=top_emotions, time_range=time_range)
                 return top_emotions_data
 

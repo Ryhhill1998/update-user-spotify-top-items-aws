@@ -229,11 +229,14 @@ def test__create_top_items_data_raises_data_service_exception_if_missing_artist_
         ),
         (
                 ItemType.EMOTION,
-                [{"name": "emotion1", "percentage": 0.3}, {"name": "emotion2", "percentage": 0.1}],
+                [
+                    {"name": "emotion1", "percentage": 0.3, "track_id": "1"},
+                    {"name": "emotion2", "percentage": 0.1, "track_id": "2"}
+                ],
                 TopEmotionsData(
                     top_emotions=[
-                        TopEmotion(name="emotion1", percentage=0.3),
-                        TopEmotion(name="emotion2", percentage=0.1)
+                        TopEmotion(name="emotion1", percentage=0.3, track_id="1"),
+                        TopEmotion(name="emotion2", percentage=0.1, track_id="2")
                     ],
                     time_range=TimeRange.SHORT
                 )
